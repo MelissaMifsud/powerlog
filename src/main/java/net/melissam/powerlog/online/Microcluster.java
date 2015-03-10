@@ -12,7 +12,7 @@ import net.melissam.powerlog.common.FeatureVector;
  * @author melissam
  *
  */
-public class Microcluster{
+public class Microcluster<FeatureVector>{
 
 	/** Sum of squares of the data in the feature vectors in the microcluster. */
 	private List<Integer> dataSumOfSquares;
@@ -34,7 +34,7 @@ public class Microcluster{
 	 * Adds a feature vector to the micro-cluster.
 	 * @param featureVector
 	 */
-	public void addFeatureVector(FeatureVector<E> featureVector){
+	public void addFeatureVector(FeatureVector featureVector){
 		
 		// update  micro-cluster statistics
 		

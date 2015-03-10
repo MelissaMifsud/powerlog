@@ -7,12 +7,15 @@ import java.util.Date;
  * Represents a feature vector of arbitrary type.
  * 
  * @author melissam
- *
- * @param <E>
  */
-public class FeatureVector<E> extends ArrayList<E>{
+public class FeatureVector extends ArrayList<Integer>{
 	
 	private Date timestamp;
+	
+	public FeatureVector(Date timestamp){
+		super();
+		this.timestamp = timestamp;
+	}
 	
 	public FeatureVector(Date timestamp, int size){
 		super(size);

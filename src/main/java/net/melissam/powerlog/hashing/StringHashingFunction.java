@@ -8,6 +8,12 @@ package net.melissam.powerlog.hashing;
  */
 public interface StringHashingFunction {
 
+	/**
+	 * Returns the hash value of a string.
+	 * 
+	 * @param s The string to hash.
+	 * @return The hash value of the string.
+	 */
 	int hash(String s);
 	
 }
