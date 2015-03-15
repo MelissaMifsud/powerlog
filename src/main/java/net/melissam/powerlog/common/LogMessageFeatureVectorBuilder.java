@@ -37,7 +37,7 @@ public class LogMessageFeatureVectorBuilder{
 				}
 				
 			}else{
-				
+				throw new InvalidLogMessage("")
 			}
 			
 		}else{
