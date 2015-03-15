@@ -114,15 +114,55 @@ public class MicroCluster {
 		
 	}
 	
+	
+	
 	/**
-	 * Calculates the maximum boundary factor which is used to decide whether a new feature vector belongs to this micro-cluster.
-	 * The maximum boundary factor is calculated as the RSM of the all the data points in this cluster.
+	 * Calculates the (Euclidean) distance of a point from the centroid of this micro-cluster.	 * 
+	 * This is required to decide which cluster a point belongs to.
 	 * 
-	 * @return The maximum boundary factor of this cluster.
+	 * @param point The point to find the distance of.
+	 * @return	The distance of the point from the center of this micro-cluster
 	 */
-	public double getMaximumBoundaryFactor(){
+	public double getDistance(double[] point){
+	
+		double[] center = getCenter();
+		double distance = 0.0;
 		
+		for (int i = 0; i < center.length; i++){
+			
+			//square o
+			distance += Math.pow(center[i] - point[i], 2);
+			
+		}
 		
+		return Math.sqrt(distance);
+		
+	}
+	
+	
+	
+	/**
+	 * Returns the maximum boundary of the cluster. This is defined as a factor of t of the root-means-square deviation of the data points from the center.
+	 * 
+	 * For clusters with 1 point, then the maximum boundary is the distance to the closest cluster, which needs to be calculated externally to the cluster.
+	 * In the case of a 1 point cluster, this method will return 0 so that the online algorithm knows it needs to find the closest cluster instead.
+	 * 
+	 * @return The maximum boundary of the cluster. This is also referred to as the radius.
+	 */
+	public double getMaximumBoundary(){
+	
+		if(size == 1) return 0; 			// paper says "If the cluster only has one point the maximum boundary is the distance to the closest cluster
+											// this needs to be calculated external to the micro-cluster, so return 0 will be indicative of this
+		else return getDeviation() * t;
+		
+	}
+	
+	
+	/**
+	 * 
+	 * @param other
+	 */
+	public void merge(MicroCluster other){
 		
 	}
 	
@@ -131,20 +171,24 @@ public class MicroCluster {
 	
 	// Calculation of root-square-means deviation
 	
+	// Calculate the variation of the points from the center
 	private double[] getVariance(){
 		
 		double[] variance = new double[this.sumOfValues.length];
 	
 		for (int i = 0; i < this.sumOfValues.length; i++) {
-			
-			double sum = this.sumOfValues[i];
-			double sumOfSquares = this.sumOfSquaresOfValues[i];
-		 
-			double avgSum = sum / this.size;
-		    double avgSumSquared = avgSum * avgSum;
+				 
+			// this is the value of the center CF for point i
+			double avgSum = this.sumOfValues[i] / this.size;
+		  	
+			// this is the sum of squares center CF for point i
+		    double avgSumOfSquares = this.sumOfSquaresOfValues[i] / size;
+            
+		    // calculate the variance 
+		    // TODO: confirm that taking the absolute value is the correct way to deal with negatives here?
+		    // shall we round to 0 instead?
+		    variance[i] = Math.abs(avgSumOfSquares - Math.pow(avgSum, 2));
 		    
-		    double avgSumOfSquares = sumOfSquares / size;
-            variance[i] = avgSumOfSquares - avgSumSquared;
 		}
 		 
 		return variance;
@@ -152,20 +196,20 @@ public class MicroCluster {
 	}
 	
 	
-	private double getNormalizedDeviation(double[] featureVector){
+	// The root-means-square (RMS) deviation
+	private double getDeviation(){
 		
+		// get the variance of all points from the centroid
 		double[] variance = getVariance();
-		double[] center = getCenter();
+		double sumOfDeviation = 0.0;
 		
-		double nd = 0.0;
-		
-		for (int i = 0; i < center.length; i++) {
-			double diff = center[i] - featureVector[i];
-			nd += (diff * diff);// variance[i];
+		// calculate the sum of the square roots of the variance of each data point
+		for (int i = 0; i < variance.length; i++) {
+		    sumOfDeviation += Math.sqrt(variance[i]);;
 		}
 		
-		return Math.sqrt(nd);
-		
+		// take the mean value
+		return sumOfDeviation / variance.length;
 	}
 	
 }

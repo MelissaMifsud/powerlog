@@ -8,26 +8,37 @@ import java.util.Date;
  * 
  * @author melissam
  */
-public class FeatureVector extends ArrayList<Integer>{
+public class FeatureVector extends ArrayList<Double>{
 	
-	private Date timestamp;
+	private long timestamp;
 	
-	public FeatureVector(Date timestamp){
+	public FeatureVector(long timestamp){
 		super();
 		this.timestamp = timestamp;
 	}
 	
-	public FeatureVector(Date timestamp, int size){
+	public FeatureVector(long timestamp, int size){
 		super(size);
 		this.timestamp = timestamp;
 	}
 	
-	public Date getTimestamp(){
+	public long getTimestamp(){
 		return this.timestamp;
 	}
 	
-	public void setTimestamp(Date timestamp){
+	public void setTimestamp(long timestamp){
 		this.timestamp = timestamp;
 	}
 	
+	public double[] toDoubleArray(){
+		
+		double[] values = new double[this.size()];
+		int i = 0;
+		for (Double d : this){
+			values[i++] = d.doubleValue();
+		}
+		
+		return values;
+		
+	}
 }
