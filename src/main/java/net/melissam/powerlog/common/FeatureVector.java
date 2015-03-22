@@ -3,12 +3,14 @@ package net.melissam.powerlog.common;
 import java.util.ArrayList;
 import java.util.Date;
 
+import org.apache.commons.math3.ml.clustering.Clusterable;
+
 /**
  * Represents a feature vector of arbitrary type.
  * 
  * @author melissam
  */
-public class FeatureVector extends ArrayList<Double>{
+public class FeatureVector extends ArrayList<Double> implements Clusterable{
 	
 	private long timestamp;
 	
@@ -30,7 +32,7 @@ public class FeatureVector extends ArrayList<Double>{
 		this.timestamp = timestamp;
 	}
 	
-	public double[] toDoubleArray(){
+	public double[] getPoint(){
 		
 		double[] values = new double[this.size()];
 		int i = 0;

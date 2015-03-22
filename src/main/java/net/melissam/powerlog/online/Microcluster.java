@@ -3,6 +3,11 @@ package net.melissam.powerlog.online;
 import java.util.Arrays;
 import java.util.Date;
 
+import org.apache.commons.math3.analysis.function.Inverse;
+import org.apache.commons.math3.ml.clustering.KMeansPlusPlusClusterer;
+import org.apache.commons.math3.special.Erf;
+import org.apache.commons.math3.stat.descriptive.rank.Percentile;
+
 /**
  * Representation of a micro-cluster maintained in the online phase.
  * 
@@ -12,7 +17,7 @@ import java.util.Date;
 public class MicroCluster {
 
 	/** Number of elements in the cluster. */
-	private int size;
+	private double size;
 	
 	/** Sum of squares of the values of each feature vector added to the micro-cluster. */
 	//vector(CF2x)
@@ -38,17 +43,15 @@ public class MicroCluster {
 	 */
 	private double t;
 	
-	/** Cluster number. */
-	// The algorithms defines 'm' as the maximum number of microclusters the algorithm should create
-	// Here 'm' represents the sequence number of the particular micro-cluster amoung all micro-clusters.
-	private int m;
+	/** Number of points to calculate the recency timestamp of this cluster on. */ 
+	private double m;
 	
 	
 	/**
 	 * Construct a Microcluster from a single feature vector. This initial addition is also the center of the cluster.
 	 * @param center
 	 */
-	public MicroCluster(double[] center, long timestamp, double t, int m){
+	public MicroCluster(double[] center, long timestamp, double t, double m){
 		
 		// nothing to add with
 		sumOfValues	= center;
@@ -159,11 +162,34 @@ public class MicroCluster {
 	
 	
 	/**
+	 * Merge a cluster into this cluster.
 	 * 
-	 * @param other
+	 * @param other the cluster to merge.
 	 */
 	public void merge(MicroCluster other){
 		
+	}
+	
+	
+	/**
+	 * Referred to as relevance stamp in paper.
+	 * 
+	 * Approximates the recency of the data points in this cluster.
+	 * If the size of the cluster is less than 2*m, then we just use the mean timestamp.
+	 * Otherwise returns the m/(2*size)-th percentile timestamp.
+	 * 
+	 * @return An approximation of the average timestamp.
+	 */
+	public double getAverageTimestamp(){
+	
+		if (size < m*2){					
+			return this.getTimestampMean();
+		}else{
+			
+			// calculate percentile
+			return getTimestampMean() + getTimestampStandardDeviation() * getQuantile(m/(2 * size));
+			
+		}
 	}
 	
 	
@@ -205,11 +231,36 @@ public class MicroCluster {
 		
 		// calculate the sum of the square roots of the variance of each data point
 		for (int i = 0; i < variance.length; i++) {
-		    sumOfDeviation += Math.sqrt(variance[i]);;
+		    sumOfDeviation += Math.sqrt(variance[i]);
 		}
 		
 		// take the mean value
 		return sumOfDeviation / variance.length;
+	}
+	
+
+	// Timestamp operations for caluclating recency
+	
+	/**
+	 * Returns the mean of all the timestamps of values in the cluster.
+	 * @return The mean of all timestamps.
+	 */
+	private double getTimestampMean(){
+		return sumOfTimestamps / size;
+	}
+	
+	
+	/**
+	 * Returns the standard deviation of the timestamps of values in the cluster.
+	 * @return
+	 */
+	private double getTimestampStandardDeviation(){
+		return Math.sqrt(sumOfSquaresOfTimestamps / size - Math.pow(sumOfTimestamps, 2)/size);
+	}
+	
+	
+	private double getQuantile(double q){	
+		return Math.sqrt(2) * Erf.erfInv(q);		
 	}
 	
 }
