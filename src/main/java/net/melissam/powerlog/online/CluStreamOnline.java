@@ -9,6 +9,7 @@ import org.apache.commons.math3.ml.clustering.CentroidCluster;
 import org.apache.commons.math3.ml.clustering.KMeansPlusPlusClusterer;
 
 import net.melissam.powerlog.common.FeatureVector;
+import net.melissam.powerlog.common.MathUtils;
 import net.melissam.powerlog.common.StreamListener;
 
 /**
@@ -33,25 +34,29 @@ public class CluStreamOnline implements StreamListener{
 	/** Create clusters. */
 	private List<MicroCluster> clusters;
 	
+	/** Threshold to use for chosing which micro-clusters can be eliminated. */
+	private int relevanceThreshold;
+	
+	/** Timestamp to keep track of after initialisation. */
+	private long timestamp;
+	
 	/** The points to initialise clusters on. */
 	private List<FeatureVector> initialisationPoints;
 	
 	/** The number of points to use for initialisation. */
 	private int initNumber;
 	
-	/** Threshold to use for chosing which micro-clusters can be eliminated. */
-	private double relevanceThreshold;
-	
 	/** Whether the clusters have been initialised or not. */
 	private boolean initialised;
 		
-	public CluStreamOnline(int maxClusters, double t, double relevanceThreshold, int initNumber){
+	public CluStreamOnline(int maxClusters, double t, int relevanceThreshold, int initNumber){
 		
 		this.maxClusters = maxClusters;
 		this.t = t;
 		
 		this.clusters = new ArrayList<MicroCluster>(maxClusters);
 		
+		this.timestamp = -1;
 		this.relevanceThreshold = relevanceThreshold;
 		
 		// initialisation properties
@@ -80,7 +85,8 @@ public class CluStreamOnline implements StreamListener{
 		}		
 		
 		// otherwise, let's choose a cluster to add this feature vector to
-				
+		featureVector.setTimestamp(++timestamp);			
+		
 		// keep track of the distance of the feature vector to each cluster
 		TreeMap<Double, MicroCluster> distances = new TreeMap<Double, MicroCluster>();
 		// compute the distances
@@ -98,10 +104,50 @@ public class CluStreamOnline implements StreamListener{
 			
 			// decide to delete old cluster or merge 2 clusters
 			
-			// get the relevance timestamp of each micro-cluster
+			// old clusters are those before the relevanceThreshold
+			long threshold = timestamp - relevanceThreshold;
+			
+			// get the timestamp of each micro-cluster
+			double eldestTimestamp = clusters.get(0).getAverageTimestamp();
+			int eldestCluster = 0;
+			for (int i=1; i<clusters.size(); i++){
+				double timestamp = clusters.get(i).getAverageTimestamp();
+				if (timestamp < eldestTimestamp){
+					eldestTimestamp = timestamp;
+					eldestCluster = i;
+				}
+			}
+			
 			// the micro-cluster with the eldest relevance timestamp below the threshold
-	
-			// if all the clusters are within the threshold, then merge the 2 closest clusters	
+			if (eldestTimestamp < threshold){
+				
+				// we can delete the eldest cluster and create a new one
+				clusters.remove(eldestCluster);
+				clusters.add(new MicroCluster(featureVector.getPoint(), featureVector.getTimestamp(), t, m));
+				
+			}else{
+				
+				// all the clusters are within the threshold, merge the 2 closest clusters
+				int closestCluster1 = 0;
+				int closestCluster2 = 0;
+				double minDistance = Double.MAX_VALUE;
+				for ( int i = 0; i < clusters.size(); i++ ) {
+					double[] center1 = clusters.get(i).getCenter();
+					for ( int j = i + 1; j < clusters.size(); j++ ) {
+						double distance = MathUtils.calculateDistance(center1, clusters.get(j).getCenter());
+						if (distance < minDistance) {
+							minDistance = distance;
+							closestCluster1 = i;
+							closestCluster2 = j;
+						}
+					}
+				}
+				
+				// TODO: check that the closest cluster are not the same?
+				clusters.get(closestCluster1).merge(clusters.get(closestCluster2));
+				clusters.remove(closestCluster2);
+				clusters.add(new MicroCluster(featureVector.getPoint(), featureVector.getTimestamp(), t, m));
+			}
 			
 		}
 		

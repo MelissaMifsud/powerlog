@@ -72,6 +72,26 @@ public class MicroCluster {
 		this.m = m;
 	}
 	
+	public double getSize() {
+		return size;
+	}
+
+	public double[] getSumOfSquaresOfValues() {
+		return sumOfSquaresOfValues;
+	}
+
+	public double[] getSumOfValues() {
+		return sumOfValues;
+	}
+
+	public double getSumOfSquaresOfTimestamps() {
+		return sumOfSquaresOfTimestamps;
+	}
+
+	public double getSumOfTimestamps() {
+		return sumOfTimestamps;
+	}
+
 	/**
 	 * Add a feature vector to this micro-cluster.
 	 * 
@@ -167,6 +187,16 @@ public class MicroCluster {
 	 * @param other the cluster to merge.
 	 */
 	public void merge(MicroCluster other){
+	
+		// use CF additivity property
+		this.size += other.getSize();
+		this.sumOfTimestamps += other.sumOfTimestamps;
+		this.sumOfSquaresOfTimestamps += other.sumOfSquaresOfTimestamps;
+	
+		for ( int i = 0; i < this.sumOfValues.length; i++ ) {
+		    this.sumOfValues[i] += other.sumOfValues[i];
+		    this.sumOfSquaresOfValues[i] += other.sumOfSquaresOfValues[i];
+		}
 		
 	}
 	
@@ -239,7 +269,7 @@ public class MicroCluster {
 	}
 	
 
-	// Timestamp operations for caluclating recency
+	// Timestamp operations for calculating recency
 	
 	/**
 	 * Returns the mean of all the timestamps of values in the cluster.

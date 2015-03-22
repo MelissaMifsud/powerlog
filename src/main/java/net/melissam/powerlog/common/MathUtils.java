@@ -34,4 +34,22 @@ public class MathUtils {
 
 	}
 
+	/**
+	 * Calculates the Euclidean distance of a point to a specific center
+	 * 
+	 * @param p1	The point to calculate the distance of.
+	 * @param p2	Where to calculate the center to.
+	 * @return The distance between the 2 points.
+	 */
+	public static double calculateDistance(double[] p1, double[] p2){
+		
+		double distance = 0.0;
+		for (int i = 0; i < p1.length; i++) {
+			double d = p1[i] - p2[i];
+			distance += d * d;
+		}
+		
+		return Math.sqrt(distance);
+		
+	}
 }

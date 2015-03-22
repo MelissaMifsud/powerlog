@@ -14,6 +14,11 @@ public class FeatureVector extends ArrayList<Double> implements Clusterable{
 	
 	private long timestamp;
 	
+	public FeatureVector(){
+		super();
+		this.timestamp = -1;
+	}
+	
 	public FeatureVector(long timestamp){
 		super();
 		this.timestamp = timestamp;
