@@ -1,7 +1,9 @@
 package net.melissam.powerlog.online;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 import org.apache.commons.math3.analysis.function.Inverse;
 import org.apache.commons.math3.ml.clustering.KMeansPlusPlusClusterer;
@@ -46,12 +48,19 @@ public class MicroCluster {
 	/** Number of points to calculate the recency timestamp of this cluster on. */ 
 	private double m;
 	
+	/** List of ids of the cluster. */
+	private List<Integer> idList;
+	
 	
 	/**
 	 * Construct a Microcluster from a single feature vector. This initial addition is also the center of the cluster.
 	 * @param center
 	 */
-	public MicroCluster(double[] center, long timestamp, double t, double m){
+	public MicroCluster(int id, double[] center, long timestamp, double t, double m){
+		
+		// set id
+		this.idList = new ArrayList<Integer>();
+		this.idList.add(id);
 		
 		// nothing to add with
 		sumOfValues	= center;
@@ -70,6 +79,10 @@ public class MicroCluster {
 		
 		this.t = t;
 		this.m = m;
+	}
+	
+	public List<Integer> getIdList(){
+		return this.idList;
 	}
 	
 	public double getSize() {
@@ -198,6 +211,7 @@ public class MicroCluster {
 		    this.sumOfSquaresOfValues[i] += other.sumOfSquaresOfValues[i];
 		}
 		
+		this.idList.addAll(other.getIdList());
 	}
 	
 	

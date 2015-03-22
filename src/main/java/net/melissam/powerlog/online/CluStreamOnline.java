@@ -48,6 +48,12 @@ public class CluStreamOnline implements StreamListener{
 	
 	/** Whether the clusters have been initialised or not. */
 	private boolean initialised;
+	
+	/** Number of features received. */
+	private int numFeatures;
+	
+	/** Cluster sequence number, serves as id. */
+	private int clusterSequence;
 		
 	public CluStreamOnline(int maxClusters, double t, int relevanceThreshold, int initNumber){
 		
@@ -62,6 +68,9 @@ public class CluStreamOnline implements StreamListener{
 		// initialisation properties
 		this.initNumber = initNumber;
 		this.initialisationPoints = new ArrayList<FeatureVector>(initNumber); 
+		
+		this.numFeatures = 0;
+		this.clusterSequence = 0;
 
 	}
 	
@@ -79,12 +88,16 @@ public class CluStreamOnline implements StreamListener{
 			// otherwise let's use a kmeans algorithm on the initial clusters (k-nearest-neighbour)
 			List<CentroidCluster<FeatureVector>> clusters = kmeans(initialisationPoints, maxClusters);
 			for (CentroidCluster<FeatureVector> cluster : clusters){
-				this.clusters.add(new MicroCluster(cluster.getCenter().getPoint(), 0L, t, m));
+				this.clusters.add(new MicroCluster(++clusterSequence, cluster.getCenter().getPoint(), 0L, t, m));
 			}
 			
+			initialised = true;
+			
+			// TODO: record initial clusters
+		
 		}		
 		
-		// otherwise, let's choose a cluster to add this feature vector to
+		// let's choose a cluster to add this feature vector to
 		featureVector.setTimestamp(++timestamp);			
 		
 		// keep track of the distance of the feature vector to each cluster
@@ -123,7 +136,7 @@ public class CluStreamOnline implements StreamListener{
 				
 				// we can delete the eldest cluster and create a new one
 				clusters.remove(eldestCluster);
-				clusters.add(new MicroCluster(featureVector.getPoint(), featureVector.getTimestamp(), t, m));
+				clusters.add(new MicroCluster(++clusterSequence, featureVector.getPoint(), featureVector.getTimestamp(), t, m));
 				
 			}else{
 				
@@ -146,10 +159,13 @@ public class CluStreamOnline implements StreamListener{
 				// TODO: check that the closest cluster are not the same?
 				clusters.get(closestCluster1).merge(clusters.get(closestCluster2));
 				clusters.remove(closestCluster2);
-				clusters.add(new MicroCluster(featureVector.getPoint(), featureVector.getTimestamp(), t, m));
+				clusters.add(new MicroCluster(++clusterSequence, featureVector.getPoint(), featureVector.getTimestamp(), t, m));
 			}
 			
 		}
+		
+		// if initialised, keep track of which cluster the feature was put into
+		// TODO: log: feature, cluster, timestamp
 		
 	}
 	
