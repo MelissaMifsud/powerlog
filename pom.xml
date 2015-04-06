@@ -7,11 +7,56 @@
   
   <dependencies>
   	
+  	<!-- Apache Math commons for k-means clustering -->
   	<dependency>
-	<groupId>org.apache.commons</groupId>
-	<artifactId>commons-math3</artifactId>
-	<version>3.4.1</version>
+		<groupId>org.apache.commons</groupId>
+		<artifactId>commons-math3</artifactId>
+		<version>3.4.1</version>
 	</dependency>
+	
+	<!-- Application logging -->
+	<dependency>
+		<groupId>org.apache.logging.log4j</groupId>
+		<artifactId>log4j-api</artifactId>
+		<version>2.2</version>
+	</dependency>
+	<dependency>
+		<groupId>org.apache.logging.log4j</groupId>
+		<artifactId>log4j-core</artifactId>
+		<version>2.2</version>
+	</dependency>
+
+	<!-- Derby dependencies -->
+	<dependency>
+		<groupId>org.apache.derby</groupId>
+		<artifactId>derby</artifactId>
+		<version>10.11.1.1</version>
+	</dependency>
+	<dependency>
+		<groupId>org.apache.derby</groupId>
+		<artifactId>derbytools</artifactId>
+		<version>10.11.1.1</version>
+	</dependency>
+	<dependency>
+		<groupId>org.apache.derby</groupId>
+		<artifactId>derbyclient</artifactId>
+		<version>10.11.1.1</version>
+	</dependency>
+	
+	<!-- Apache commons configuration -->
+	<dependency>
+		<groupId>commons-configuration</groupId>
+		<artifactId>commons-configuration</artifactId>
+		<version>1.10</version>
+	</dependency>
+	
+	<!-- GSon Libraries -->
+	<dependency>
+    	<groupId>com.google.code.gson</groupId>
+    	<artifactId>gson</artifactId>
+    	<version>2.3.1</version>
+	</dependency>
+	
 
   </dependencies>
   

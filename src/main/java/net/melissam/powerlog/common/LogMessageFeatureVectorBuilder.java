@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import net.melissam.powerlog.clustering.FeatureVector;
 import net.melissam.powerlog.hashing.StringHashingFunction;
 
 public class LogMessageFeatureVectorBuilder{
@@ -31,20 +32,21 @@ public class LogMessageFeatureVectorBuilder{
 			
 			if (matcher.groupCount() == vectorSize){
 				
-				vector = new FeatureVector(timestamp, vectorSize);
+				vector = new FeatureVector();
+				vector.setTimestamp(timestamp.getTime());
 				for (int i = 1; i <= vectorSize; i++){
-					vector.add(hashingFunction.hash(matcher.group(i)));
+					vector.add((double)hashingFunction.hash(matcher.group(i)));
 				}
 				
 			}else{
-				throw new InvalidLogMessage("")
+				throw new InvalidLogMessage("");
 			}
 			
 		}else{
 			throw new InvalidLogMessage(String.format("logMessage=%s does not match the regex=%s.", logMessage, logMessageMatcher.pattern()));
 		}
 		
-		FeatureVector featureVector = new FeatureVector(timestamp);
+		return vector;
 		
 	}
 }
