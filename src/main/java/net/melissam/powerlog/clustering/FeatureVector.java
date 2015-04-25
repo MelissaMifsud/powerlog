@@ -2,6 +2,7 @@ package net.melissam.powerlog.clustering;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import org.apache.commons.math3.ml.clustering.Clusterable;
 
@@ -10,17 +11,21 @@ import org.apache.commons.math3.ml.clustering.Clusterable;
  * 
  * @author melissam
  */
-public class FeatureVector extends ArrayList<Double> implements Clusterable{
+public class FeatureVector implements Clusterable{
 	
 	private int  id;			// line number from dataset
 	private long timestamp;
 	private int  initialCluster;
+	
+	private List<Double> point;
 	
 	public FeatureVector(){
 		super();
 		this.id = -1;
 		this.timestamp = -1;
 		this.initialCluster = -1;
+		
+		this.point = new ArrayList<Double>();
 	}
 	
 	public FeatureVector(int id){
@@ -28,6 +33,9 @@ public class FeatureVector extends ArrayList<Double> implements Clusterable{
 		this.id = id;
 		this.timestamp = -1;
 		this.initialCluster = -1;
+		
+		this.point = new ArrayList<Double>();
+
 	}
 	
 	public FeatureVector(int id, long timestamp){
@@ -35,6 +43,9 @@ public class FeatureVector extends ArrayList<Double> implements Clusterable{
 		this.id = id;
 		this.timestamp = timestamp;
 		this.initialCluster = -1;
+		
+		this.point = new ArrayList<Double>();
+
 	}
 	
 	public int getId(){
@@ -61,11 +72,21 @@ public class FeatureVector extends ArrayList<Double> implements Clusterable{
 		this.initialCluster = cluster;
 	}
 	
+	public void add(double d){
+		point.add(d);
+	}
+	
+	public void addAll(double[] features){
+		for (double feature : features){
+			point.add(feature);
+		}
+	}
+	
 	public double[] getPoint(){
 		
-		double[] values = new double[this.size()];
+		double[] values = new double[point.size()];
 		int i = 0;
-		for (Double d : this){
+		for (Double d : point){
 			values[i++] = d.doubleValue();
 		}
 		

@@ -1,5 +1,6 @@
 package net.melissam.powerlog.clustering;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -16,7 +17,10 @@ import org.apache.commons.math3.stat.descriptive.rank.Percentile;
  * @author melissam
  *
  */
-public class MicroCluster {
+public class MicroCluster implements Serializable {
+
+	/** Serial UUID */
+	private static final long serialVersionUID = 107446923322303897L;
 
 	/** Number of elements in the cluster. */
 	private double size;

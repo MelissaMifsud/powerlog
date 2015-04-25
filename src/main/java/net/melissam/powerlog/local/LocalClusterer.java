@@ -1,9 +1,6 @@
 package net.melissam.powerlog.local;
 
-import java.awt.image.DataBufferUShort;
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -12,17 +9,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.naming.ConfigurationException;
+import javax.jms.JMSException;
 
 import net.melissam.powerlog.clustering.CluStream;
 import net.melissam.powerlog.clustering.FeatureVector;
 import net.melissam.powerlog.clustering.MicroCluster;
-import net.melissam.powerlog.common.DbUtils;
 
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.pattern.FullLocationPatternConverter;
 
 import com.google.gson.Gson;
 
@@ -37,8 +33,13 @@ public class LocalClusterer {
 	// id of local clusterer
 	private int instanceId;	
 	
-	// how often to take a snapshot of clusters and send to global
-	private int snapshotFrequency;
+	// number of stream items per time unit
+	private int streamSpeed;
+	private int timestamp;
+	
+	// snapshot frequencies
+	private int snapshotAlpha;
+	private int snapshotL;
 	
 	// where to read training set from
 	private FileInputStream dataset;
@@ -52,6 +53,9 @@ public class LocalClusterer {
 	// the clustering learner
 	private CluStream learner;
 	
+	// object that sends microclusters to Global clustering
+	private MicroClusterMessageSender sender;
+	
 	// Json writer
 	private Gson jsonWriter;
 	
@@ -61,21 +65,31 @@ public class LocalClusterer {
 	// db creation script
 	// private static final String DB_CREATE_SCRIPT = "localdb.sql";
 	
-	public LocalClusterer(int instanceId, int maxClusters, int maximalBoundaryFactor, int relevanceThreshold, int snapshotFrequency, String datasetFilename, 
-								int featureSelectionFactor) throws FileNotFoundException{
+	public LocalClusterer() throws ConfigurationException, FileNotFoundException, JMSException{
 		
-		this.instanceId = instanceId;
-		this.snapshotFrequency = snapshotFrequency;
 		
-		this.dataset = new FileInputStream(datasetFilename);		
-		this.featureSelectionFactor = featureSelectionFactor;
+		// read properties
+		PropertiesConfiguration config = new PropertiesConfiguration("local.properties");
 		
-		this.learner = new CluStream(maxClusters, maximalBoundaryFactor, relevanceThreshold, maxClusters);
+		this.instanceId = config.getInteger("instanceid", 1);
+		
+		this.streamSpeed = config.getInteger("streamSpeed", 2000);
+		this.timestamp = 0;
+		
+		this.snapshotAlpha = config.getInteger("snapshot.a", 2);
+		this.snapshotL = config.getInteger("snapshot.l", 10);
+		
+		this.dataset = new FileInputStream(config.getString("dataset"));		
+		this.featureSelectionFactor = config.getInteger("datasetFeatureSelection", 1);
+		
+		this.learner = new CluStream(config.getInteger("maxClusters", 100), config.getInteger("maximumBoundaryFactor", 2), config.getInteger("relevanceThreshold", 1000), config.getInteger("initNumber", 1000));
 		this.features = 0;
+		
+		this.sender = new MicroClusterMessageSender(this.instanceId, config.getString("mq.broker.host"), config.getInt("mq.broker.port"), config.getString("mq.queue"));
 		
 		this.jsonWriter = new Gson();
 		
-		LOG.info("{localClusterer={}, snapshotFrequency={}, dataset={}, featureSelectionFactor={}}", this.instanceId, this.snapshotFrequency, datasetFilename, featureSelectionFactor);
+		LOG.info("{localClusterer={}, streamSpeed={}, dataset={}, featureSelectionFactor={}, initNumber={}}", this.instanceId, this.streamSpeed, config.getString("dataset"), featureSelectionFactor, config.getInteger("initNumber", 1000));
 	}
 	
 	public void train(){
@@ -92,20 +106,26 @@ public class LocalClusterer {
 			FeatureVector fv = null;
 			Map<FeatureVector, Integer> placement = null;
 			
+			// initialise the time
+			timestamp = 1;
+			
 			// go through all available features
 			while((line = reader.readLine()) != null){
 
+				// should this cluster read this line?
 				if (++linesRead % featureSelectionFactor == 0){
 
 					// select the features we are going to use from a single item
 					fv = getFeatureVector(line);
-					fv.setId(linesRead);
 
 					if (fv != null){
 						
+						fv.setId(linesRead);
+						fv.setTimestamp(timestamp);
+						
 						// give it to the learner
 						placement = learner.cluster(fv);
-						featuresUsed++;
+						++featuresUsed;
 
 						// record the cluster id the feature was added to
 						if (placement != null && !placement.isEmpty()){
@@ -117,16 +137,26 @@ public class LocalClusterer {
 							}
 
 							// decide whether it is time to take a snapshot of the clusters
-							if (featuresUsed % snapshotFrequency == 0){
+							if (featuresUsed % 2000 == 0){
 							
 								List<MicroCluster> clusters = learner.getClusters();
 								LOG.info("clusters=" + jsonWriter.toJson(clusters));
 								
-								// (later) send to Global
+								// send to Global
+								try{
+									sender.send(clusters, timestamp);
+								}catch(JMSException ex){
+									LOG.error("Error sending clusters to Global.", ex);
+								}
 							}
 							
 						}else{
 							LOG.info("featureVector={} used for initialisation.", fv.getId());
+						}
+						
+						// adjust timestamp according to stream speed, if needed
+						if (featuresUsed % streamSpeed == 0){
+							++timestamp;	
 						}
 
 					}else{						
@@ -154,7 +184,8 @@ public class LocalClusterer {
 		LOG.info("totalFeaturesRead={}, totalFeaturesUsed={}", linesRead, featuresUsed);
 	}
 	
-	public static void main(String[] args) throws Exception{
+	
+	public static void main(String... args) throws Exception{
 		
 		// set up databaset
 		// LOG.info("Setting up the database.");
@@ -162,22 +193,11 @@ public class LocalClusterer {
 		// dbConfigurer.build();
 		// LOG.info("Database ready.");
 		
-		// read properties
-		PropertiesConfiguration config = new PropertiesConfiguration("local.properties");
-
-		// read instance id
-		Integer instanceId = config.getInteger("instanceid", 1);
-		Integer maxClusters = config.getInteger("maxClusters", 100);
-		Integer snapshotFrequency = config.getInteger("snapshotFrequency", 1000);
-		Integer maximumBoundaryFactor = config.getInteger("maximumBoundaryFactor", 2);
-		Integer relevanceThreshold = config.getInteger("relevanceThreshold", 1000);
-		Integer datasetFeatureSelection = config.getInteger("datasetFeatureSelection", 1);
-		String dataset = config.getString("dataset");
-
 		// create the clusterer
-		LocalClusterer clusterer = new LocalClusterer(instanceId, maxClusters, maximumBoundaryFactor, relevanceThreshold, snapshotFrequency, dataset, datasetFeatureSelection);
+		LocalClusterer clusterer = new LocalClusterer();
 		clusterer.train();
 				
+		
 	}
 	
 	//--------------------------------- Private Methods. --------------------------------------------//
@@ -218,7 +238,7 @@ public class LocalClusterer {
 				fv.add(Double.parseDouble(_attributes[i]));
 			}
 			
-			LOG.info("Created feature vector with {} attributes.", fv.size());
+			// LOG.info("Created feature vector with {} attributes.", fv.size());
 			
 		}else{
 			LOG.warn("Incorrect number of attributes. expected=42, found={}", _attributes.length);

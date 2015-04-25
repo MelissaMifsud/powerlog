@@ -66,7 +66,7 @@ public class CluStream{
 		this.maxClusters = maxClusters;
 		this.t = t;
 		
-		this.clusters = new ArrayList<MicroCluster>(maxClusters);
+		this.clusters = new ArrayList<MicroCluster>();
 		
 		this.timestamp = -1;
 		this.relevanceThreshold = relevanceThreshold;
@@ -100,18 +100,18 @@ public class CluStream{
 			}
 		
 			// otherwise let's use a kmeans algorithm on the initial clusters (k-nearest-neighbour)
-			List<CentroidCluster<FeatureVector>> clusters = kmeans(initialisationPoints, maxClusters);
+			List<CentroidCluster<FeatureVector>> _clusters = kmeans(initialisationPoints, maxClusters);
 		
 			// create the clusters, keeping track of which feature vector went into which cluster
-			for (CentroidCluster<FeatureVector> cluster : clusters){
+			for (CentroidCluster<FeatureVector> _cluster : _clusters){
 				
 				// this is only ok because we know that each cluster contains one point which is the center
 				// unfortunately Apache Math kMeans does not maintain a reference to the clusterable object that is the center
-				this.clusters.add(new MicroCluster(++clusterSequence, cluster.getCenter().getPoint(), ((FeatureVector)cluster.getPoints().get(0)).getTimestamp(), t, m));
+				this.clusters.add(new MicroCluster(++clusterSequence, _cluster.getCenter().getPoint(), ((FeatureVector)_cluster.getPoints().get(0)).getTimestamp(), t, m));
 				
 				// add all the elements in the cluster
-				if (cluster.getPoints() != null){
-					for (FeatureVector fv : cluster.getPoints()){
+				if (_cluster.getPoints() != null){
+					for (FeatureVector fv : _cluster.getPoints()){
 						placement.put(fv, clusterSequence);
 					}
 				}
@@ -186,9 +186,9 @@ public class CluStream{
 				MicroCluster merged = clusters.get(closestCluster1);
 				merged.merge(clusters.get(closestCluster2));
 				clusters.remove(closestCluster2);
-				merged.addFeatureVector(featureVector.getPoint(), featureVector.getTimestamp());
+				clusters.add(new MicroCluster(++clusterSequence, featureVector.getPoint(), featureVector.getTimestamp(), t, m));
 				
-				placement.put(featureVector, merged.getIdList().get(0));
+				placement.put(featureVector, clusterSequence);
 			}
 			
 		}
