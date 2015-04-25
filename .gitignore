@@ -222,3 +222,5 @@ pip-log.txt
 target/
 logs/
 datasets/
+activemq-data/
+lib/
