@@ -7,13 +7,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
+import net.melissam.powerlog.utils.MathUtils;
+
 import org.apache.commons.math3.ml.clustering.CentroidCluster;
 import org.apache.commons.math3.ml.clustering.KMeansPlusPlusClusterer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import net.melissam.powerlog.common.MathUtils;
-import net.melissam.powerlog.common.StreamListener;
 
 /**
  * Online phase of the CluStream algorithm.

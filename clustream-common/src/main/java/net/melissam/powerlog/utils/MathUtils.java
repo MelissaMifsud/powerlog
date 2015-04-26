@@ -1,4 +1,4 @@
-package net.melissam.powerlog.common;
+package net.melissam.powerlog.utils;
 
 public class MathUtils {
 

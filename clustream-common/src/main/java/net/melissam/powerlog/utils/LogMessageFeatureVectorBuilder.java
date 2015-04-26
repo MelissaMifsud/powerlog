@@ -1,4 +1,4 @@
-package net.melissam.powerlog.common;
+package net.melissam.powerlog.utils;
 
 import java.util.Date;
 import java.util.regex.Matcher;
