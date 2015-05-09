@@ -44,7 +44,7 @@ public class LocalClusterer {
 	// where to read training set from
 	private FileInputStream dataset;
 	
-	// factor of feeature number to use for training from the dataset
+	// factor of feature number to use for training from the dataset
 	private int featureSelectionFactor;
 	
 	// number of features that have been read

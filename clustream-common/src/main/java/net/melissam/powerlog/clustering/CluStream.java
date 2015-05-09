@@ -133,7 +133,7 @@ public class CluStream{
 		Entry<Double, MicroCluster> closest = distances.firstEntry();
 		
 		// if the point's distance is within the maximum boundary of the cluster, then we can add the point
-		if (closest.getKey() < closest.getValue().getMaximumBoundary()){
+		if (closest.getKey() < closest.getValue().getRadius()){
 			closest.getValue().addFeatureVector(featureVector.getPoint(), featureVector.getTimestamp());
 			placement.put(featureVector, closest.getValue().getIdList().get(0));
 		}else{
