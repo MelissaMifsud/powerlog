@@ -55,13 +55,21 @@ public class MicroClusterMessageSender {
     
     public void send(List<MicroCluster> microClusters, int timestamp) throws JMSException{
     	
-    	MicroClusterMessage message = new MicroClusterMessage(instanceId, timestamp);
-    	message.setMicroClusters(microClusters);
-    	
-    	ObjectMessage msg = new ActiveMQObjectMessage();
-    	msg.setObject(message);
-    	
-    	messageProducer.send(msg);
+    	//for (MicroCluster cluster : microClusters){
+
+    		MicroClusterMessage message = new MicroClusterMessage(instanceId, timestamp);
+    		message.setMicroClusters(microClusters);
+
+    		ObjectMessage msg = new ActiveMQObjectMessage();
+    		msg.setObject(message);
+
+    		messageProducer.send(msg);
+    		
+    		try{
+    			Thread.sleep(500);
+    		}catch(InterruptedException ex){}
+
+    	//}
     	
     }
     

@@ -112,8 +112,8 @@ public class LocalClusterer {
 			// go through all available features
 			while((line = reader.readLine()) != null){
 
-				// should this cluster read this line?
-				if (++linesRead % featureSelectionFactor == 0){
+				// should this cluster read this line? // use odd numbers
+				if (++linesRead % 2 == 1){
 
 					// select the features we are going to use from a single item
 					fv = getFeatureVector(line);
@@ -137,7 +137,7 @@ public class LocalClusterer {
 							}
 
 							// decide whether it is time to take a snapshot of the clusters
-							if (featuresUsed % 2000 == 0){
+							if (featuresUsed >= 2000 && featuresUsed % 50 == 0){
 							
 								List<MicroCluster> clusters = learner.getClusters();
 								LOG.info("clusters=" + jsonWriter.toJson(clusters));
@@ -187,6 +187,8 @@ public class LocalClusterer {
 	
 	public static void main(String... args) throws Exception{
 		
+		long start = System.currentTimeMillis();
+		
 		// set up databaset
 		// LOG.info("Setting up the database.");
 		// DbUtils dbConfigurer = new DbUtils("/localdb.sql");
@@ -196,6 +198,10 @@ public class LocalClusterer {
 		// create the clusterer
 		LocalClusterer clusterer = new LocalClusterer();
 		clusterer.train();
+		
+		LOG.info("executionTime={}ms", System.currentTimeMillis() - start);
+		
+		System.exit(0);
 				
 		
 	}

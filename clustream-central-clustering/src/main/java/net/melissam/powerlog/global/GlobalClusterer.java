@@ -97,7 +97,7 @@ public class GlobalClusterer {
 	private void setupQueueConsumer(int mqPort) throws JMSException{
 		
 		// create a Connection Factory
-        ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://localhost:" + mqPort);
+        ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://localhost:" + mqPort + "?jms.prefetchPolicy.queuePrefetch=5000");
 
         // create a Connection
         connection = connectionFactory.createConnection();
@@ -131,6 +131,8 @@ public class GlobalClusterer {
 	
 	private void train(){
 		
+		int misses = 0;
+		
 		// read messages off the queue 
 		while(running){
 		
@@ -139,6 +141,9 @@ public class GlobalClusterer {
 				Message message = messageConsumer.receive(1000);
 				
 				if (message != null){
+					
+					// reset misses
+					misses = 0;
 					
 					MicroClusterMessage microClusterMessage = (MicroClusterMessage)((ObjectMessage)message).getObject(); 				
 					LOG.info("Received message from instanceid={}, timestamp={}", microClusterMessage.getInstanceId(), microClusterMessage.getTimestamp());
@@ -183,7 +188,10 @@ public class GlobalClusterer {
 					}
 					
 					
-				}else{
+				}else{ 
+					
+					if (++misses > 300) running = false;
+					
 					try{
 						Thread.sleep(1000);
 					}catch(InterruptedException ex){
@@ -193,25 +201,49 @@ public class GlobalClusterer {
 				
 			}catch(JMSException ex){
 				LOG.error("Error reading message off the queue={}.", QUEUE_NAME, ex);
+				if (++misses > 300) running = false;
 			}
 			
 			
 		}
 		
-		LOG.info("Stopping...");
+		LOG.info("Micro-clustering ended.");
 		try{
+			
 			messageConsumer.close();
 			connection.close();
+			
 		}catch(JMSException ex){
 			LOG.error("Error whilst closing JMS connection.", ex);
-		}finally{
-			LOG.info("Stopped.");
+		}			
+
+		LOG.info("clusters=" + jsonWriter.toJson(learner.getClusters()));
+		LOG.info("Starting macro-clustering phase using {} micro-clusters.", learner.getClusters().size());
+		
+		long start = System.currentTimeMillis();
+		
+		Map<MicroCluster, List<MicroCluster>> macroClusters = new ClustreamModifiedKMeansClusterer().doMacroClusterCreation(learner.getClusters(), 5);
+		LOG.info("{} macro clusters in {}ms", macroClusters.size(), System.currentTimeMillis() - start);
+		
+		int mc = 0;
+		for (Entry<MicroCluster, List<MicroCluster>> entry : macroClusters.entrySet()){
+			
+			MicroCluster macroCluster = entry.getKey();						
+			LOG.info("MacroCluster={}, center={}, radius={}, deviation={}, microClusters={}",++mc, macroCluster.getCenter(), macroCluster.getRadius(), macroCluster.getDeviation(), entry.getValue().size());
+			
+			int _mc = 0;
+			for (MicroCluster microCluster : entry.getValue()){
+				LOG.info("MicroCluster={}, center={}, radius={}, deviation={}",++_mc, microCluster.getCenter(), microCluster.getRadius(),microCluster.getDeviation());
+			}
+			
 		}
 		
 	}
 	
 	
 	public static void main(String... args){
+		
+		long start = System.currentTimeMillis();
 		
 		try{
 			final GlobalClusterer clusterer = new GlobalClusterer();
@@ -233,6 +265,9 @@ public class GlobalClusterer {
 			LOG.error("Could not initialise clusterer.", ex);
 			
 		}
+		
+		LOG.info("executionTime={}ms", System.currentTimeMillis() - start);
+		System.exit(0);
 		
 	}
 }

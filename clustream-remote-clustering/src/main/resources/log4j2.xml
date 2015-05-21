@@ -3,7 +3,7 @@
 <Configuration name="powerlog">
 
 	<Properties>
-    	<Property name="id">1</Property>
+    	<Property name="id">3</Property>
   	</Properties>
   
   <Appenders>
@@ -29,7 +29,7 @@
   
     <Root level="info">
       <AppenderRef ref="Async"/>
-      <AppenderRef ref="STDOUT"/>
+      <!-- <AppenderRef ref="STDOUT"/> -->
     </Root>
     
   </Loggers>

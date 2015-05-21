@@ -82,6 +82,8 @@ public class MicroCluster extends ClusterFeatureVector {
 	 * @param timestamp
 	 */
 	public void addFeatureVector(double[] featureVector, long timestamp){
+		
+		super.addFeatureVector(featureVector);
 			
 		// adjust timestamp values
 		sumOfTimestamps += timestamp;
@@ -235,7 +237,7 @@ public class MicroCluster extends ClusterFeatureVector {
 	
 	
 	// The root-means-square (RMS) deviation
-	private double getDeviation(){
+	public double getDeviation(){
 		
 		// get the variance of all points from the centroid
 		double[] variance = getVariance();

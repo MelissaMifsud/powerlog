@@ -14,6 +14,8 @@ import org.apache.commons.math3.ml.clustering.KMeansPlusPlusClusterer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.google.gson.Gson;
+
 /**
  * Online phase of the CluStream algorithm.
  * 
@@ -64,6 +66,7 @@ public class CluStream{
 		
 		this.maxClusters = maxClusters;
 		this.t = t;
+		this.m = maxClusters;
 		
 		this.clusters = new ArrayList<MicroCluster>();
 		
@@ -119,6 +122,7 @@ public class CluStream{
 			initialised = true;
 			
 			LOG.info("{} clusters initialised.", this.clusters.size());
+			LOG.info("initialClusters={}", new Gson().toJson(this.clusters));
 		
 		}				
 		

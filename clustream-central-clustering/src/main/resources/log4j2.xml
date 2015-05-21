@@ -29,7 +29,7 @@
   
     <Root level="info">
       <AppenderRef ref="Async"/>
-      <AppenderRef ref="STDOUT"/>
+      <!--  <AppenderRef ref="STDOUT"/> -->
     </Root>
     
   </Loggers>
