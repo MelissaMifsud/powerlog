@@ -9,8 +9,6 @@ import java.util.TreeMap;
 
 import net.melissam.powerlog.utils.MathUtils;
 
-import org.apache.commons.math3.ml.clustering.CentroidCluster;
-import org.apache.commons.math3.ml.clustering.KMeansPlusPlusClusterer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -102,22 +100,10 @@ public class CluStream{
 			}
 		
 			// otherwise let's use a kmeans algorithm on the initial clusters (k-nearest-neighbour)
-			List<CentroidCluster<FeatureVector>> _clusters = kmeans(initialisationPoints, maxClusters);
-		
-			// create the clusters, keeping track of which feature vector went into which cluster
-			for (CentroidCluster<FeatureVector> _cluster : _clusters){
-				
-				// this is only ok because we know that each cluster contains one point which is the center
-				// unfortunately Apache Math kMeans does not maintain a reference to the clusterable object that is the center
-				this.clusters.add(new MicroCluster(++clusterSequence, _cluster.getCenter().getPoint(), ((FeatureVector)_cluster.getPoints().get(0)).getTimestamp(), t, m));
-				
-				// add all the elements in the cluster
-				if (_cluster.getPoints() != null){
-					for (FeatureVector fv : _cluster.getPoints()){
-						placement.put(fv, clusterSequence);
-					}
-				}
-			}
+			KMeansClusterer kmeans = new KMeansClusterer(t, m);
+			clusters.addAll(kmeans.cluster(initialisationPoints, maxClusters));		
+			clusterSequence = clusters.get(clusters.size()-1).getIdList().get(0);			
+			placement.putAll(kmeans.getPlacements());
 			
 			initialised = true;
 			
@@ -138,7 +124,7 @@ public class CluStream{
 		
 		// if the point's distance is within the maximum boundary of the cluster, then we can add the point
 		if (closest.getKey() < closest.getValue().getRadius()){
-			closest.getValue().addFeatureVector(featureVector.getPoint(), featureVector.getTimestamp());
+			closest.getValue().addFeatureVector(featureVector);
 			placement.put(featureVector, closest.getValue().getIdList().get(0));
 		}else{
 			
@@ -202,20 +188,6 @@ public class CluStream{
 	public List<MicroCluster> getClusters(){
 		return this.clusters;
 	}
-	
-	
-	/**
-	 * Use KMeansPlusPlus clustering on the initialisation points to create maxClusters clusters.
-	 * @param points			The points to cluster.
-	 * @param maxClusters		The desired number of clusters.
-	 * @return
-	 */
-	private List<CentroidCluster<FeatureVector>> kmeans(List<FeatureVector> points, int maxClusters){
 		
-		KMeansPlusPlusClusterer<FeatureVector> clusterer = new KMeansPlusPlusClusterer<FeatureVector>(maxClusters);
-		return clusterer.cluster(points);
-
-	}
-	
 
 }

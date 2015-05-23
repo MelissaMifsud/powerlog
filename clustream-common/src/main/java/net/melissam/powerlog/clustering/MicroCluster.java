@@ -1,7 +1,9 @@
 package net.melissam.powerlog.clustering;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.math3.special.Erf;
 
@@ -39,6 +41,9 @@ public class MicroCluster extends ClusterFeatureVector {
 	/** List of ids of the cluster. */
 	private List<Integer> idList;
 	
+	/** Set of ground truth labels of features that were added to the Micro-cluster. */
+	private Set<String> groundTruthLabels;
+	
 	
 	/**
 	 * Construct a Microcluster from a single feature vector. This initial addition is also the center of the cluster.
@@ -61,6 +66,8 @@ public class MicroCluster extends ClusterFeatureVector {
 		this.t = t;
 		this.m = m;
 		
+		this.groundTruthLabels = new HashSet<String>();
+		
 	}
 	
 	public List<Integer> getIdList(){
@@ -74,6 +81,10 @@ public class MicroCluster extends ClusterFeatureVector {
 	public double getSumOfTimestamps() {
 		return sumOfTimestamps;
 	}
+	
+	public Set<String> getGroundTruthLabels(){
+		return groundTruthLabels;
+	}
 
 	/**
 	 * Add a feature vector to this micro-cluster.
@@ -81,13 +92,15 @@ public class MicroCluster extends ClusterFeatureVector {
 	 * @param featureVector 
 	 * @param timestamp
 	 */
-	public void addFeatureVector(double[] featureVector, long timestamp){
+	public void addFeatureVector(FeatureVector featureVector){
 		
-		super.addFeatureVector(featureVector);
+		super.addFeature(featureVector.getPoint());
 			
 		// adjust timestamp values
-		sumOfTimestamps += timestamp;
-		sumOfSquaresOfTimestamps += Math.pow(timestamp, 2);
+		sumOfTimestamps += featureVector.getTimestamp();
+		sumOfSquaresOfTimestamps += Math.pow(featureVector.getTimestamp(), 2);
+		
+		groundTruthLabels.add(featureVector.getGroundTruthLable());
 		
 	}
 	
@@ -141,12 +154,14 @@ public class MicroCluster extends ClusterFeatureVector {
 	 */
 	public void merge(MicroCluster other){
 	
-		super.add(other);
+		super.addFeature(other);
 		
 		this.sumOfTimestamps += other.sumOfTimestamps;
 		this.sumOfSquaresOfTimestamps += other.sumOfSquaresOfTimestamps;
 		
 		this.idList.addAll(other.getIdList());
+		
+		this.groundTruthLabels.addAll(other.groundTruthLabels);
 	}
 	
 	
@@ -293,7 +308,6 @@ public class MicroCluster extends ClusterFeatureVector {
 
 		for (int i = 0; i < center.length; i++) {
 			double diff = center[i] - featureVector[i];
-			// distance += (diff * diff) / (variance[i] * variance[i]);
 			distance += Math.pow(diff / variance[i], 2);
 		}
 		

@@ -31,17 +31,14 @@ public class ClusterFeatureVector extends Cluster {
 		}
 	}
 
-	public void addFeatureVector(double[] featureVector){
+	public void addFeature(double[] featureVector){
 		
 		assert(featureVector.length == sumOfValues.length);
-		
-		// adjust sumOfValues
+				
 		for (int i = 0; i < sumOfValues.length; i++){
-			sumOfValues[i] += featureVector[i];
-		}
-		
-		// adjust sum of squares
-		for (int i = 0; i < sumOfSquaresOfValues.length; i++){
+			// adjust sumOfValues
+			sumOfValues[i] += featureVector[i];		
+			// adjust sumOfSquares
 			sumOfSquaresOfValues[i] += Math.pow(featureVector[i], 2);
 		}
 	
@@ -50,7 +47,7 @@ public class ClusterFeatureVector extends Cluster {
 	}
 	
 	
-	public void add(ClusterFeatureVector other){
+	public void addFeature(ClusterFeatureVector other){
 		
 		// use CF additivity property
 		this.size += other.getSize();

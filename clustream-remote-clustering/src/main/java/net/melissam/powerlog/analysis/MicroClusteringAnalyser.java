@@ -198,7 +198,7 @@ public class MicroClusteringAnalyser {
 
 	public static void main(String... args) throws IOException{
 
-		MicroClusteringAnalyser analyser = new MicroClusteringAnalyser("logs/powerlog-1.log", "kddcup.data_10_percent_corrected");
+		MicroClusteringAnalyser analyser = new MicroClusteringAnalyser("logs/powerlog-3.log", "datasets/kddcup.data_10_percent_corrected");
 		analyser.mapFeatureTypes();
 		analyser.processResults();
 		analyser.displayResults();

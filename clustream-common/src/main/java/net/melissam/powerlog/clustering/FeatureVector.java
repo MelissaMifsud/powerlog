@@ -1,7 +1,6 @@
 package net.melissam.powerlog.clustering;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.math3.ml.clustering.Clusterable;
@@ -16,6 +15,8 @@ public class FeatureVector implements Clusterable{
 	private int  id;			// line number from dataset
 	private long timestamp;
 	private int  initialCluster;
+	
+	private String groundTruthLabel;
 	
 	private List<Double> point;
 	
@@ -72,6 +73,14 @@ public class FeatureVector implements Clusterable{
 		this.initialCluster = cluster;
 	}
 	
+	public String getGroundTruthLable(){
+		return this.groundTruthLabel;
+	}
+	
+	public void setGroundTruthLabel(String label){
+		this.groundTruthLabel = label;
+	}
+	
 	public void add(double d){
 		point.add(d);
 	}
@@ -93,6 +102,19 @@ public class FeatureVector implements Clusterable{
 		return values;
 		
 	}
+	
+	public int getDimension(){
+		return this.point.size();		
+	}
+	
+	public double get(int index){
+		return this.point.get(index);
+	}
+	
+	public void set(int index, double value){
+		this.point.set(index, value);
+	}
+	
 	
 	public boolean equals(Object o){
 		
