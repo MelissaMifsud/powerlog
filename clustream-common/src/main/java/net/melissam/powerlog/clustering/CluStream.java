@@ -100,7 +100,7 @@ public class CluStream{
 			}
 		
 			// otherwise let's use a kmeans algorithm on the initial clusters (k-nearest-neighbour)
-			KMeansClusterer kmeans = new KMeansClusterer(t, m);
+			CluStreamKMeansClusterer kmeans = new CluStreamKMeansClusterer(t, m);
 			clusters.addAll(kmeans.cluster(initialisationPoints, maxClusters));		
 			clusterSequence = clusters.get(clusters.size()-1).getIdList().get(0);			
 			placement.putAll(kmeans.getPlacements());

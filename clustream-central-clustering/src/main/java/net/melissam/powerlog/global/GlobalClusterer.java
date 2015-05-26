@@ -1,5 +1,7 @@
 package net.melissam.powerlog.global;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -13,7 +15,11 @@ import javax.jms.ObjectMessage;
 import javax.jms.Queue;
 import javax.jms.Session;
 
-import net.melissam.powerlog.clustering.*;
+import net.melissam.powerlog.clustering.CluStream;
+import net.melissam.powerlog.clustering.Cluster;
+import net.melissam.powerlog.clustering.ClustreamModifiedKMeansClusterer;
+import net.melissam.powerlog.clustering.FeatureVector;
+import net.melissam.powerlog.clustering.MicroCluster;
 import net.melissam.powerlog.messaging.MicroClusterMessage;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -153,14 +159,13 @@ public class GlobalClusterer {
 					Map<FeatureVector, Integer> placement = null; // keep info about where CluStream puts the feature vector
 					for (MicroCluster microCluster : microClusterMessage.getMicroClusters()){
 						
-						FeatureVector fv = new FeatureVector(microClustersReceived);
+						FeatureVector fv = new FeatureVector(++microClustersReceived);
 						fv.setTimestamp(timestamp);
 						fv.addAll(microCluster.getCenter());
 						
 						// give it to the learner
 						placement = learner.cluster(fv);
 						
-						++microClustersReceived;
 						
 						// record the cluster id the feature was added to
 						if (placement != null && !placement.isEmpty()){
@@ -222,18 +227,19 @@ public class GlobalClusterer {
 		
 		long start = System.currentTimeMillis();
 		
-		Map<MicroCluster, List<MicroCluster>> macroClusters = new ClustreamModifiedKMeansClusterer().doMacroClusterCreation(learner.getClusters(), 5);
+		ClustreamModifiedKMeansClusterer clusterer = new ClustreamModifiedKMeansClusterer();
+		Map<MicroCluster, List<MicroCluster>> macroClusters = clusterer.doMacroClusterCreation(learner.getClusters(), 5);
 		LOG.info("{} macro clusters in {}ms", macroClusters.size(), System.currentTimeMillis() - start);
 		
 		int mc = 0;
 		for (Entry<MicroCluster, List<MicroCluster>> entry : macroClusters.entrySet()){
 			
 			MicroCluster macroCluster = entry.getKey();						
-			LOG.info("MacroCluster={}, center={}, radius={}, deviation={}, microClusters={}",++mc, macroCluster.getCenter(), macroCluster.getRadius(), macroCluster.getDeviation(), entry.getValue().size());
+			LOG.info("MacroCluster={}, center={}, radius={}, microClusters={}",++mc, macroCluster.getCenter(), macroCluster.getRadius(), entry.getValue().size());
 			
 			int _mc = 0;
 			for (MicroCluster microCluster : entry.getValue()){
-				LOG.info("MicroCluster={}, center={}, radius={}, deviation={}",++_mc, microCluster.getCenter(), microCluster.getRadius(),microCluster.getDeviation());
+				LOG.info("MicroCluster={}, center={}, radius={}, size={}", ++_mc, microCluster.getCenter(), microCluster.getRadius(), microCluster.getSize());
 			}
 			
 		}

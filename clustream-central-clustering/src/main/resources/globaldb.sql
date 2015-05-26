@@ -6,27 +6,41 @@
  *  
  */
 
--- Table that keeps record of all the inputs from local instances and the cluster they are put into
+-- Table that keeps record of all the feaatures received from local instances
 -- Each feature is the center of a cluster at a given timestamp from a local instance
-CREATE TABLE Input
+CREATE TABLE Feature
 (
-	timestamp 		INTEGER 		NOT NULL, -- timestamp at which the input was received
-	instance		INTEGER			NOT NULL, -- the id of the local instance the input came from
-	itimestamp		INTEGER			NOT NULL, -- timestamp of the feature when it was sent from the instance
-	icluster		INTEGER			NOT NULL, -- the id of the cluster the feature represents
-	feature 		VARCHAR(1024) 	NOT NULL, -- the serialized feature (= center of iCluster)
-	cluster			INTEGER			NOT NULL, -- the id of the global cluster the input was put into
+	id					INTEGER			NOT NULL, 	-- id given to the feature
+	gtime	 			INTEGER 		NOT NULL, 	-- time at which the input was received
+	instance			INTEGER			NOT NULL, 	-- the id of the local instance the input came from
+	itime				INTEGER			NOT NULL, 	-- time of the feature when it was sent from the instance
+	icluster			INTEGER			NOT NULL, 	-- the id of the cluster the feature represents on the remote instance
+	idList				VARCHAR(1024), 			  	-- the id list of the cluster that was sent from a remote instance
+	sumOfValues			VARCHAR(1024)	NOT NULL,	-- serialised array of sum of attributes
+	sumSquareOfValues	VARCHAR(1024)	NOT NULL,	-- serialised array of sum of squares of values
+	size				INTEGER			NOT NULL,	-- number of features in the cluster
 	
-	CONSTRAINT input_pk PRIMARY KEY (timestamp)
+	CONSTRAINT feature_pk PRIMARY KEY (id)
 	
+);
+
+CREATE TABLE Placement
+(
+	featureId		INTEGER			NOT NULL,	-- id of feature
+	clusterId		INTEGER			NOT NULL,	-- id of cluster the feature was placed into
+	
+	CONSTRAINT placement_pk PRIMARY KEY (id)
 );
 
 -- Table that stores the status of the clusters at intervals of the clustering
 CREATE TABLE Snapshot
 (
-	timestamp 		INTEGER 		NOT NULL, -- timestamp at which the status is being recorded
-	featureCount	INTEGER			NOT NULL, -- number of features received so far
-	clusters		VARCHAR(1024)	NOT NULL, -- serialized representation of cluster ids and id-lists
+	time 				INTEGER 		NOT NULL, 	-- time at which the status is being recorded
+	clusterId			INTEGER			NOT NULL, 	-- id of cluster
+	idList				VARCHAR(1024),				-- list of clusters that were merged with this cluster	
+	sumOfValues			VARCHAR(1024)	NOT NULL,	-- serialised array of sum of attributes
+	sumSquareOfValues	VARCHAR(1024)	NOT NULL,	-- serialised array of sum of squares of values
+	size				INTEGER			NOT NULL,	-- number of features in the cluster
 	
-	CONSTRAINT snapshot_pk PRIMARY KEY (timestamp)
+	CONSTRAINT snapshot_pk PRIMARY KEY (timestamp, clusterId)
 );

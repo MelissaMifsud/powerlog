@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import net.melissam.powerlog.clustering.Cluster;
+import net.melissam.powerlog.clustering.ClustreamModifiedKMeansClusterer;
 import net.melissam.powerlog.clustering.MicroCluster;
 
 import org.apache.logging.log4j.LogManager;
@@ -61,11 +63,11 @@ public class MacroClusterCreator {
 					for (Entry<MicroCluster, List<MicroCluster>> entry : macroClusters.entrySet()){
 						
 						MicroCluster macroCluster = entry.getKey();						
-						LOG.info("MacroCluster={}, center={}, radius={}, deviation={}, microClusters={}",++mc, macroCluster.getCenter(), macroCluster.getRadius(), macroCluster.getDeviation(), entry.getValue().size());
+						LOG.info("MacroCluster={}, center={}, radius={}, microClusters={}",++mc, macroCluster.getCenter(), macroCluster.getRadius(), entry.getValue().size());
 						
 						int _mc = 0;
 						for (MicroCluster microCluster : entry.getValue()){
-							LOG.info("MicroCluster={}, center={}, radius={}, deviation={}",++_mc, microCluster.getCenter(), microCluster.getRadius(),microCluster.getDeviation());
+							LOG.info("MicroCluster={}, center={}, radius={}, size={}", ++_mc, microCluster.getCenter(), microCluster.getRadius(), microCluster.getSize());
 						}
 						
 					}

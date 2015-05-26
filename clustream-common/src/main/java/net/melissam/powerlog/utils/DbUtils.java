@@ -22,16 +22,37 @@ import org.apache.logging.log4j.Logger;
 
 import com.google.gson.Gson;
 
+/**
+ * Abstract class for different instances to use, specifying their own database and connection settings.
+ * 
+ * @author melissam
+ *
+ */
 public class DbUtils {
 	
+	/** Host running database one. */
+	private String host;
+	
+	/** Port running the database on. */
+	private int port;
+	
+	/** Name of database. */
+	private String name;
+	
+	/** Username to connect to database. */
+	private String username;
+	
+	/** Password to connect to database with. */
+	private String password;
+	
 	/** String to acquire db connection. */
-	private static final String OPEN_CONNECTION = "jdbc:derby://localhost:1527/powerlog;create=true;user=melissa;password=assilem";
+	private static final String CONNECT = "jdbc:derby://%s:%s/%s;create=true;user=%s;password=%s";
 	
 	/** Connection string that deletes the database. */
-	private static final String DELETE_DATABASE = "jdbc:derby://localhost:1527/powerlog;drop=true;user=melissa;password=assilem";
+	private static final String DELETE = "jdbc:derby://%s:%s/%s;drop=true;user=%s;password=%s";
 	
 	/** Connection string the shuts down the database. */
-	// private final static String SHUTDOWN_DATABASE = "jdbc:derby://localhost:1527/powerlog;shutdown=true";
+	private final static String SHUTDOWN = "jdbc:derby://%s:%s/%s;shutdown=true";
 	
 	/** Derby Embedded driver class name. */
 	private static final String DRIVER_NAME = "org.apache.derby.jdbc.ClientDriver";
@@ -39,7 +60,64 @@ public class DbUtils {
 	/** Class logger. */
 	private static final Logger LOG = LogManager.getLogger(DbUtils.class);
 	
-	public static void build(String script) throws PowerLogException{
+	
+	public DbUtils(String host, int port, String name,String username, String password) throws Exception{
+		
+		this.host = host;
+		this.port = port;
+		this.name = name;
+		this.username = username;
+		this.password = password;
+		
+		///set up db driver
+		Class.forName(DRIVER_NAME).newInstance();
+	}
+	
+	
+	/**
+	 * Get a connection to the database for querying.
+	 * @return	A connection to the database for querying.
+	 */
+	public Connection getConnection() throws SQLException{	
+		return  DriverManager.getConnection(String.format(CONNECT, host, port, name, username, password));		
+	}
+	
+	/**
+	 * Drop the database.
+	 */
+	public void dropDatabase() {
+		
+		try{
+			
+    		DriverManager.getConnection(String.format(DELETE, host, port, name, username, password)).close();    		
+    		
+    	}catch(SQLException ex){
+    		LOG.warn("Unable to drop database.", ex);
+    	}
+		
+	}
+	
+	
+	public void shutdownDatabase(){
+		
+		try{
+			
+    		DriverManager.getConnection(String.format(SHUTDOWN, host, port, name, username, password)).close();    		
+    		
+    	}catch(SQLException ex){
+    		LOG.warn("Unable to shutdown database.", ex);
+    	}
+		
+	}
+	
+	
+	/**
+	 * Create the database by running the specified script.
+	 * 
+	 * @param script				The script to run.
+	 * @throws PowerLogException	Thrown if there was a problem creating the database.
+	 */
+	public void build(String script) throws PowerLogException{
 
 		// let's check if the database already exists
 		// this will create an empty database
@@ -52,7 +130,7 @@ public class DbUtils {
 		try{
 			
 			// connect and recreate
-			conn = DriverManager.getConnection(OPEN_CONNECTION);
+			conn = getConnection();
 			LOG.info("Creating database...");
 
 			long start = System.currentTimeMillis();
@@ -75,7 +153,7 @@ public class DbUtils {
 		}catch(SQLException | UnsupportedEncodingException ex){
 
 			// delete db
-			deleteDatabase();
+			dropDatabase();
 
 			throw new PowerLogException("Unable to create database schema.", ex);
 
@@ -101,24 +179,9 @@ public class DbUtils {
 	}
 	
 	
-	/**
-	 * Deletes the database files.
-	 */
-	public static void deleteDatabase(){
-				
-		try{
-   		
-    		DriverManager.getConnection(DELETE_DATABASE).close();    		
-    		
-    	}catch(SQLException ex){
-    		LOG.warn("Unable to clean up database files.", ex);
-    	}
+	public void saveNewFeature(FeatureVector vector, int cluster) throws SQLException{
 		
-	}
-	
-	public static void saveNewFeature(FeatureVector vector, int cluster) throws SQLException{
-		
-		Connection conn = DriverManager.getConnection(OPEN_CONNECTION);
+		Connection conn = getConnection();
 		PreparedStatement stmt = conn.prepareStatement("INSERT INTO Feature (id, feature, cluster) VALUES (?, ?, ?)");
 		stmt.setInt(1, vector.getId());
 		stmt.setString(2, new Gson().toJson(vector.getPoint()));
@@ -127,9 +190,9 @@ public class DbUtils {
 		stmt.executeUpdate();
 	}
 	
-	public static void saveClusters(int featureCount, int lastFeatureId, List<MicroCluster> clusters) throws SQLException{
+	public void saveClusters(int featureCount, int lastFeatureId, List<MicroCluster> clusters) throws SQLException{
 		
-		Connection conn = DriverManager.getConnection(OPEN_CONNECTION);
+		Connection conn = getConnection();
 		PreparedStatement stmt = conn.prepareStatement("INSERT INTO State (timestamp, featureCount, lastFeature, clusters) VALUES (?, ?, ?, ?)");
 		stmt.setLong(1, System.currentTimeMillis());
 		stmt.setInt(2, featureCount);

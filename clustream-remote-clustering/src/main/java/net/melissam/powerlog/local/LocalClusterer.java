@@ -8,14 +8,16 @@ import java.util.Map.Entry;
 
 import javax.jms.JMSException;
 
-import net.melissam.powerlog.normalisation.DataNormaliser;
-import net.melissam.powerlog.normalisation.MeanRangeDataNormalizer;
-import net.melissam.powerlog.normalisation.StatisticalDataNormaliser;
 import net.melissam.powerlog.clustering.CluStream;
+import net.melissam.powerlog.clustering.Cluster;
+import net.melissam.powerlog.clustering.ClustreamModifiedKMeansClusterer;
 import net.melissam.powerlog.clustering.FeatureVector;
 import net.melissam.powerlog.clustering.MicroCluster;
 import net.melissam.powerlog.datasource.FeatureSelector;
 import net.melissam.powerlog.datasource.KDD99FeatureSelector;
+import net.melissam.powerlog.normalisation.DataNormaliser;
+import net.melissam.powerlog.normalisation.MeanRangeDataNormalizer;
+import net.melissam.powerlog.normalisation.StatisticalDataNormaliser;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
@@ -101,10 +103,10 @@ public class LocalClusterer {
 	}
 	
 	
-	public void initialise() throws IOException{
-		
-		this.featureSelector = new KDD99FeatureSelector(this.dataset, 2, 0);		
-		this.dataNormaliser = new MeanRangeDataNormalizer(featureSelector);
+	public void initialise() throws IOException{		
+				
+		// normalize over full data set
+		this.dataNormaliser = new StatisticalDataNormaliser(new KDD99FeatureSelector(this.dataset, 1, 0));		
 		this.dataNormaliser.setup();		
 		
 	}
@@ -115,8 +117,9 @@ public class LocalClusterer {
 		int featuresUsed = 0;
 
 		// restart the feature selector
-		featureSelector.restart();
-
+		// featureSelector.restart();
+		this.featureSelector = new KDD99FeatureSelector(this.dataset, 2, 0);		
+		
 		FeatureVector fv = null;
 		Map<FeatureVector, Integer> placement = null;
 
@@ -167,7 +170,27 @@ public class LocalClusterer {
 		}
 
 		if (learner.getClusters() != null){
-			LOG.info("clusters=" + jsonWriter.toJson(learner.getClusters()));
+			LOG.info("clusters=" + jsonWriter.toJson(learner.getClusters()));			
+			LOG.info("Starting macro-clustering phase using {} micro-clusters.", learner.getClusters().size());
+			
+			long start = System.currentTimeMillis();
+			
+			ClustreamModifiedKMeansClusterer clusterer = new ClustreamModifiedKMeansClusterer();
+			Map<MicroCluster, List<MicroCluster>> macroClusters = clusterer.doMacroClusterCreation(learner.getClusters(), 5);
+			LOG.info("{} macro clusters in {}ms", macroClusters.size(), System.currentTimeMillis() - start);
+			
+			int mc = 0;
+			for (Entry<MicroCluster, List<MicroCluster>> entry : macroClusters.entrySet()){
+				
+				MicroCluster macroCluster = entry.getKey();						
+				LOG.info("MacroCluster={}, center={}, radius={}, microClusters={}",++mc, macroCluster.getCenter(), macroCluster.getRadius(), entry.getValue().size());
+				
+				int _mc = 0;
+				for (MicroCluster microCluster : entry.getValue()){
+					LOG.info("MicroCluster={}, center={}, radius={}, size={}", ++_mc, microCluster.getCenter(), microCluster.getRadius(), microCluster.getSize());
+				}
+				
+			}
 		}
 
 		LOG.info("totalFeatures={}", featuresUsed);

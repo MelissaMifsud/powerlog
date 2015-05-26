@@ -53,7 +53,7 @@ public class KDD99FeatureSelector implements FeatureSelector {
 				
 				line = reader.readLine();
 				
-			}while(line != null && ++lineNumber % mod == remainder);
+			}while(line != null && ++lineNumber % mod != remainder);
 			
 			if (line != null){
 				
@@ -67,7 +67,7 @@ public class KDD99FeatureSelector implements FeatureSelector {
 			
 		}catch(IOException ex){
 			
-			// stop reding if there is an exception
+			// stop reading if there is an exception
 			LOG.warn("Exception reading features. No more features will be read.", ex);
 			
 			close();
