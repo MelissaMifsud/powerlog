@@ -1,7 +1,5 @@
 package net.melissam.powerlog.global;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -16,7 +14,6 @@ import javax.jms.Queue;
 import javax.jms.Session;
 
 import net.melissam.powerlog.clustering.CluStream;
-import net.melissam.powerlog.clustering.Cluster;
 import net.melissam.powerlog.clustering.ClustreamModifiedKMeansClusterer;
 import net.melissam.powerlog.clustering.FeatureVector;
 import net.melissam.powerlog.clustering.MicroCluster;
@@ -39,7 +36,6 @@ public class GlobalClusterer {
 	private int microClustersReceived;
 	
 	// how many microClusters to receive in order to increment the timestamp
-	private int streamSpeed;
 	private int timestamp;
 
 	// snapshot frequencies
@@ -76,7 +72,7 @@ public class GlobalClusterer {
 		setupLeaner(config.getInteger("maxClusters", 100), config.getInteger("maximumBoundaryFactor", 2), config.getInteger("relevanceThreshold", 1000), config.getInteger("initNumber", 1000));
 
 		// set up stream and snapshot configuration
-		streamSpeed = config.getInteger("streamSpeed", 2000);
+		// streamSpeed = config.getInteger("streamSpeed", 2000);
 		snapshotAlpha = config.getInteger("snapshot.a", 2);
 		snapshotL = config.getInteger("snapshot.l", 10);
 		
@@ -143,12 +139,14 @@ public class GlobalClusterer {
 		while(running){
 		
 			try{
-				// read a message
+				
+				// read a message off the queue
 				Message message = messageConsumer.receive(1000);
 				
 				if (message != null){
 					
 					// reset misses
+					// if we keep getting misses for a specified time, the clusterer will stop
 					misses = 0;
 					
 					MicroClusterMessage microClusterMessage = (MicroClusterMessage)((ObjectMessage)message).getObject(); 				
@@ -164,8 +162,7 @@ public class GlobalClusterer {
 						fv.addAll(microCluster.getCenter());
 						
 						// give it to the learner
-						placement = learner.cluster(fv);
-						
+						placement = learner.cluster(fv);	
 						
 						// record the cluster id the feature was added to
 						if (placement != null && !placement.isEmpty()){
@@ -180,7 +177,7 @@ public class GlobalClusterer {
 							if (microClustersReceived % 2000 == 0){
 							
 								List<MicroCluster> clusters = learner.getClusters();
-								LOG.info("clusters=" + jsonWriter.toJson(clusters));
+								LOG.info("snapshot-time={}, clusters=" + jsonWriter.toJson(clusters));
 								
 								// later save for macro-clustering
 								
@@ -195,7 +192,7 @@ public class GlobalClusterer {
 					
 				}else{ 
 					
-					if (++misses > 300) running = false;
+					if (++misses > 150) running = false;
 					
 					try{
 						Thread.sleep(1000);

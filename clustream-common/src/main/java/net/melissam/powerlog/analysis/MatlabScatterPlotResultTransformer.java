@@ -116,7 +116,7 @@ public class MatlabScatterPlotResultTransformer {
 	
 	public static void main(String args[]) throws Exception{
 		
-		MatlabScatterPlotResultTransformer.transform("results/201505241200_Global.txt", null);
+		MatlabScatterPlotResultTransformer.transform("results/201505262000_Global.txt", null);
 		
 	}
 }

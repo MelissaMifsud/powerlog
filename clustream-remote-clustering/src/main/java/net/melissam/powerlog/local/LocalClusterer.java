@@ -9,14 +9,12 @@ import java.util.Map.Entry;
 import javax.jms.JMSException;
 
 import net.melissam.powerlog.clustering.CluStream;
-import net.melissam.powerlog.clustering.Cluster;
 import net.melissam.powerlog.clustering.ClustreamModifiedKMeansClusterer;
 import net.melissam.powerlog.clustering.FeatureVector;
 import net.melissam.powerlog.clustering.MicroCluster;
 import net.melissam.powerlog.datasource.FeatureSelector;
 import net.melissam.powerlog.datasource.KDD99FeatureSelector;
 import net.melissam.powerlog.normalisation.DataNormaliser;
-import net.melissam.powerlog.normalisation.MeanRangeDataNormalizer;
 import net.melissam.powerlog.normalisation.StatisticalDataNormaliser;
 
 import org.apache.commons.configuration.ConfigurationException;
@@ -106,8 +104,8 @@ public class LocalClusterer {
 	public void initialise() throws IOException{		
 				
 		// normalize over full data set
-		this.dataNormaliser = new StatisticalDataNormaliser(new KDD99FeatureSelector(this.dataset, 1, 0));		
-		this.dataNormaliser.setup();		
+		// this.dataNormaliser = new StatisticalDataNormaliser(new KDD99FeatureSelector(this.dataset, 1, 0));		
+		// this.dataNormaliser.setup();		
 		
 	}
 	
@@ -118,7 +116,7 @@ public class LocalClusterer {
 
 		// restart the feature selector
 		// featureSelector.restart();
-		this.featureSelector = new KDD99FeatureSelector(this.dataset, 2, 0);		
+		this.featureSelector = new KDD99FeatureSelector(this.dataset, 2, 2 % instanceId);		
 		
 		FeatureVector fv = null;
 		Map<FeatureVector, Integer> placement = null;
@@ -128,8 +126,13 @@ public class LocalClusterer {
 
 		// go through all available features
 		while((fv = featureSelector.getNext()) != null){
+			
+			// adjust timestamp according to stream speed, if needed
+			if (++featuresUsed % streamSpeed == 0){
+				++timestamp;	
+			}
 
-			dataNormaliser.normalise(fv);			
+			// dataNormaliser.normalise(fv);			
 			fv.setTimestamp(timestamp);
 
 			// give it to the learner
@@ -145,10 +148,10 @@ public class LocalClusterer {
 				}
 
 				// decide whether it is time to take a snapshot of the clusters
-				if (featuresUsed >= 2000 && featuresUsed % 50 == 0){
+				if (featuresUsed >= 2000 && timestamp % 100 == 0){
 
 					List<MicroCluster> clusters = learner.getClusters();
-					LOG.info("clusters=" + jsonWriter.toJson(clusters));
+					LOG.info("snapshot-time={}, clusters={}", timestamp, jsonWriter.toJson(clusters));
 
 					// send to Global
 					try{
@@ -160,11 +163,6 @@ public class LocalClusterer {
 
 			}else{
 				LOG.info("featureVector={} used for initialisation.", fv.getId());
-			}
-
-			// adjust timestamp according to stream speed, if needed
-			if (++featuresUsed % streamSpeed == 0){
-				++timestamp;	
 			}
 
 		}
