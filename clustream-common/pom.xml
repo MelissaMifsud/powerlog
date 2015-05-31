@@ -48,6 +48,14 @@
 		<groupId>com.google.code.gson</groupId>
 		<artifactId>gson</artifactId>
 	</dependency>
+	
+	<!-- Weka for converting dataset to arff file for testing with MOA -->
+	<dependency>
+		<groupId>nz.ac.waikato.cms.weka</groupId>
+		<artifactId>weka-stable</artifactId>
+		<version>3.6.10</version>
+	</dependency>
+	
   	
   </dependencies>
   

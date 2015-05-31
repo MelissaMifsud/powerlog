@@ -7,6 +7,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+
+/**
+ * Implements the k-means clustering.
+ * @author melissam
+ *
+ */
 public class CluStreamKMeansClusterer {
 
 	private Map<FeatureVector, Integer> placements;

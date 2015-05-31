@@ -16,6 +16,12 @@ import org.apache.activemq.command.ActiveMQObjectMessage;
 import net.melissam.powerlog.clustering.*;
 import net.melissam.powerlog.messaging.MicroClusterMessage;
 
+
+/**
+ * JMS client for sending snapshots to the cental node.
+ * @author melissam
+ *
+ */
 public class MicroClusterMessageSender {
 
 	//the id of the instance this sender is sending on behalf of
@@ -66,7 +72,7 @@ public class MicroClusterMessageSender {
     		messageProducer.send(msg);
     		
     		try{
-    			Thread.sleep(50);
+    			Thread.sleep(25);
     		}catch(InterruptedException ex){}
 
     	//}

@@ -7,6 +7,13 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
+
+/**
+ * Class to convert clustering results to matlab structures.
+ * 
+ * @author melissam
+ *
+ */
 public class MatlabScatterPlotResultTransformer {
 	
 	private enum Colour{
@@ -19,6 +26,13 @@ public class MatlabScatterPlotResultTransformer {
 		
 	}
 	
+	/**
+	 * Transforms a source results file and creates the results in the destination file.
+	 * 
+	 * @param source		Results file.
+	 * @param destination	Destination file to write transformed results to.
+	 * @throws IOException	Thrown if there is a problem accessing files.
+	 */
 	public static void transform(String source, String destination) throws IOException{
 		
 		/** Lines with centroid values of macro clusters. */
@@ -46,7 +60,7 @@ public class MatlabScatterPlotResultTransformer {
 			if (line.contains("MacroCluster=")){
 				
 				// add centroid: locate center array, remove all commas
-				macroCentroids.add(line.substring(line.indexOf("center=[") + 8, line.indexOf("], radius=")).replace(",", ""));
+				macroCentroids.add(line.substring(line.indexOf("center=[") + 8, line.indexOf("], radius=")).replace(",", " "));
 				
 				// add radius
 				macroRadii.add(line.substring(line.indexOf("radius=") + 7, line.lastIndexOf(",")));
@@ -63,7 +77,7 @@ public class MatlabScatterPlotResultTransformer {
 				colours.add(colour.name().toLowerCase());
 				
 				// add centroid: locate center array, remove all commas
-				microCentroids.add(line.substring(line.indexOf("center=[") + 8, line.indexOf("], radius=")).replace(",", ""));
+				microCentroids.add(line.substring(line.indexOf("center=[") + 8, line.indexOf("], radius=")).replace(",", " "));
 			}
 			
 		}
@@ -75,7 +89,7 @@ public class MatlabScatterPlotResultTransformer {
 		StringBuilder sb = new StringBuilder("macroClusters=[");
 		for(int i=0; i<macroCentroids.size(); i++){
 			sb.append(macroCentroids.get(i));
-			if (i + 1 < macroCentroids.size()) sb.append(";");
+			if (i + 1 < macroCentroids.size()) sb.append(";");			
 			sb.append("\n");
 		}
 		sb.append("];");
@@ -116,7 +130,7 @@ public class MatlabScatterPlotResultTransformer {
 	
 	public static void main(String args[]) throws Exception{
 		
-		MatlabScatterPlotResultTransformer.transform("results/201505262000_Global.txt", null);
+		MatlabScatterPlotResultTransformer.transform("results/results-one-instream-t1.txt", null);
 		
 	}
 }

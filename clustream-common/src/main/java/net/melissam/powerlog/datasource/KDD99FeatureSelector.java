@@ -10,6 +10,13 @@ import net.melissam.powerlog.clustering.FeatureVector;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+/**
+ * KDD Cup-99 data set feature selector. Reads lines from a dataset file and transforms them to a feature vector
+ * with a subset of the attributes as needed.
+ * 
+ * @author melissam
+ *
+ */
 public class KDD99FeatureSelector implements FeatureSelector {
 
 	// Reader to go trough dataset file

@@ -5,6 +5,12 @@ import java.util.List;
 
 import net.melissam.powerlog.clustering.*;
 
+/**
+ * Snapshot message that is sent to the central node containing the micro-cluster information.
+ * 
+ * @author melissam
+ *
+ */
 public class MicroClusterMessage implements Serializable {
 		
 	/** Serial UUID. */

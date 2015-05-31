@@ -26,12 +26,12 @@ public class ClustreamModifiedKMeansClusterer {
 	private static final Logger LOG = LogManager.getLogger(ClustreamModifiedKMeansClusterer.class);
 		
 	
-	public Map<MicroCluster, List<MicroCluster>> doMacroClusterCreation(List<MicroCluster> _microClusters, int k){
+	public Map<Cluster, List<MicroCluster>> doMacroClusterCreation(List<MicroCluster> _microClusters, int k){
 		
 		Cluster[] kmeansClusters = kMeans(_microClusters, k);
 		
 		// now cluster the micro clusters around the kmeans centers
-		MicroCluster[] macroClusters = new MicroCluster[kmeansClusters.length];
+		Cluster[] macroClusters = new MicroCluster[kmeansClusters.length];
 		List<List<MicroCluster>> macroMicroClusters = new ArrayList<List<MicroCluster>>(macroClusters.length);
 		for (int i = 0; i < macroClusters.length; i++){
 			macroMicroClusters.add(new ArrayList<MicroCluster>());
@@ -54,15 +54,14 @@ public class ClustreamModifiedKMeansClusterer {
 		    // Add to cluster
 		    if ( macroClusters[closestCluster] == null ) {
 		    	macroClusters[closestCluster] = point;
-		    } else {
-		    	macroClusters[closestCluster].merge(point);
-		    	macroMicroClusters.get(closestCluster).add(point);
-		    }
-		    
-			
+		    } 
+		    // else{
+		    //macroClusters[closestCluster].merge(point);
+		    macroMicroClusters.get(closestCluster).add(point);
+		    //}
 		}
 		
-		Map<MicroCluster, List<MicroCluster>> result = new HashMap<MicroCluster, List<MicroCluster>>();
+		Map<Cluster, List<MicroCluster>> result = new HashMap<Cluster, List<MicroCluster>>();
 		for (int i = 0; i < macroClusters.length; i++){
 			result.put(macroClusters[i], macroMicroClusters.get(i));
 		}

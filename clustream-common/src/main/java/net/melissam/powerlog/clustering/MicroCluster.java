@@ -120,7 +120,7 @@ public class MicroCluster extends ClusterFeatureVector {
 		for (int i = 0; i < center.length; i++){
 			
 			//square o
-			distance += Math.pow(center[i] - point[i], 2);
+			distance += Math.pow(point[i] - center[i], 2);
 			
 		}
 		

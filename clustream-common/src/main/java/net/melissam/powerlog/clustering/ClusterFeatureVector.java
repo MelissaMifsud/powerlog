@@ -1,5 +1,12 @@
 package net.melissam.powerlog.clustering;
 
+/**
+ * Representation of a cluster feature vector which keeps track of cluster sum of values and sum of square
+ * values of cluster features.
+ * 
+ * @author melissam
+ *
+ */
 public class ClusterFeatureVector extends Cluster {
 
 	/** Serial UUID. */
@@ -16,7 +23,11 @@ public class ClusterFeatureVector extends Cluster {
 	// vector(CF1x)
 	protected double[] sumOfValues;	
 	
-	
+	/**
+	 * Constructs a cluster feature vector with the given center points.
+	 * 
+	 * @param center The center to assign.
+	 */
 	public ClusterFeatureVector(double[] center){
 
 		this.size = 1;
@@ -31,6 +42,12 @@ public class ClusterFeatureVector extends Cluster {
 		}
 	}
 
+	
+	/**
+	 * Adds a feature to this cluster.
+	 * 
+	 * @param featureVector The feature vector to add.
+	 */
 	public void addFeature(double[] featureVector){
 		
 		assert(featureVector.length == sumOfValues.length);
@@ -47,6 +64,11 @@ public class ClusterFeatureVector extends Cluster {
 	}
 	
 	
+	/**
+	 * Adds a feature to this cluster.
+	 * 
+	 * @param featureVector The feature vector to add.
+	 */
 	public void addFeature(ClusterFeatureVector other){
 		
 		// use CF additivity property
@@ -87,14 +109,27 @@ public class ClusterFeatureVector extends Cluster {
 		return size;
 	}
 	
+	/**
+	 * Returns the number of features represented by this cluster.
+	 * @return the number of features represented by this cluster.
+	 */
 	public double getSize() {
 		return size;
 	}
 
+	/**
+	 * Returns the sum of squares.
+	 * @return The sum of squares.
+	 */
 	public double[] getSumOfSquaresOfValues() {
 		return sumOfSquaresOfValues;
 	}
 
+	
+	/**
+	 * Returns the sum of values. 
+	 * @return The sum of values.
+	 */
 	public double[] getSumOfValues() {
 		return sumOfValues;
 	}

@@ -25,6 +25,12 @@ import org.apache.logging.log4j.Logger;
 import com.google.gson.Gson;
 import com.google.gson.internal.LinkedTreeMap;
 
+/**
+ * Analyses clustering log files.
+ * 
+ * @author melissam
+ *
+ */
 public class MicroClusteringAnalyser {
 
 	private String resultsFilename;

@@ -6,6 +6,12 @@ import org.apache.logging.log4j.Logger;
 import net.melissam.powerlog.clustering.FeatureVector;
 import net.melissam.powerlog.datasource.FeatureSelector;
 
+/**
+ * Performs attribute scaling using max and min values of attributes.
+ * 
+ * @author melissam
+ *
+ */
 public class MeanRangeDataNormalizer implements DataNormaliser{
 
 	// the difference between the minimum value and maximum value of an attribute

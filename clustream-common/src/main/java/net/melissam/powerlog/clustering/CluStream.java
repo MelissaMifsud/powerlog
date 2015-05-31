@@ -17,8 +17,6 @@ import com.google.gson.Gson;
 /**
  * Online phase of the CluStream algorithm.
  * 
- * Uses kMeansPlusPlus for initialisation. We may want to make this configurable to see the difference.
- * 
  * @author melissam
  *
  */
@@ -60,6 +58,15 @@ public class CluStream{
 	/** Class logger. */
 	private static final Logger LOG = LogManager.getLogger(CluStream.class);
 		
+	
+	/**
+	 * Initialises the CluStream process.
+	 * 
+	 * @param maxClusters			Maximum number of clusters to have at any time.
+	 * @param t						The factor to use to calculate the maximum radius boundary. 
+	 * @param relevanceThreshold	Time units after which a cluster can be deleted if it has not changed.
+	 * @param initNumber			The number of features to use to create the initial micro-clusters.
+	 */
 	public CluStream(int maxClusters, double t, int relevanceThreshold, int initNumber){
 		
 		this.maxClusters = maxClusters;
@@ -68,7 +75,7 @@ public class CluStream{
 		
 		this.clusters = new ArrayList<MicroCluster>();
 		
-		this.timestamp = -1;
+		this.timestamp = 0;
 		this.relevanceThreshold = relevanceThreshold;
 		
 		// initialisation properties
@@ -81,6 +88,12 @@ public class CluStream{
 	}
 	
 	
+	/**
+	 * Cluster the given feature and return the cluster assignment.
+	 * 
+	 * @param featureVector The feature vector to cluster.
+	 * @return	The cluster assignment for the feature.
+	 */
 	public Map<FeatureVector, Integer> cluster(FeatureVector featureVector) {
 		
 		// return a mapping of where the feature vector was placed
@@ -99,7 +112,7 @@ public class CluStream{
 				return null;
 			}
 		
-			// otherwise let's use a kmeans algorithm on the initial clusters (k-nearest-neighbour)
+			// otherwise let's use a kmeans algorithm on the initial clusters
 			CluStreamKMeansClusterer kmeans = new CluStreamKMeansClusterer(t, m);
 			clusters.addAll(kmeans.cluster(initialisationPoints, maxClusters));		
 			clusterSequence = clusters.get(clusters.size()-1).getIdList().get(0);			
@@ -122,8 +135,29 @@ public class CluStream{
 		// take the closest micro-cluster
 		Entry<Double, MicroCluster> closest = distances.firstEntry();
 		
+		double radius = 0.0;
+		if (closest.getValue().getSize() == 0){
+			
+			// take the radius to be the distance to the nearest neighbour
+			
+			radius = Double.MAX_VALUE;
+			double[] center = closest.getValue().getCenter();
+			for ( MicroCluster cluster : clusters ) {
+				
+				if ( cluster == closest ) {
+					continue;
+				}
+
+				double distance = cluster.getDistance(center);
+				radius = Math.min( distance, radius );
+			}
+			
+		}else{
+			radius = closest.getValue().getRadius();
+		}
+		
 		// if the point's distance is within the maximum boundary of the cluster, then we can add the point
-		if (closest.getKey() < closest.getValue().getRadius()){
+		if (closest.getKey() < radius){
 			closest.getValue().addFeatureVector(featureVector);
 			placement.put(featureVector, closest.getValue().getIdList().get(0));
 		}else{
@@ -131,7 +165,7 @@ public class CluStream{
 			// decide to delete old cluster or merge 2 clusters
 			
 			// old clusters are those before the relevanceThreshold
-			long threshold = timestamp - relevanceThreshold;
+			long threshold = featureVector.getTimestamp() - relevanceThreshold;
 			
 			// get the timestamp of each micro-cluster
 			double eldestTimestamp = clusters.get(0).getAverageTimestamp();
@@ -185,6 +219,10 @@ public class CluStream{
 		return placement;
 	}
 	
+	/**
+	 * Return the current set of micro-clusters.
+	 * @return The current set of micro-clusters.
+	 */
 	public List<MicroCluster> getClusters(){
 		return this.clusters;
 	}
